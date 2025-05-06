@@ -1,0 +1,65 @@
+@import url("https://js.arcgis.com/4.32/@arcgis/core/assets/esri/themes/light/main.css");
+@import url("https://js.arcgis.com/calcite-components/3.0.3/calcite.css");
+@import url("https://js.arcgis.com/map-components/4.32/arcgis-map-components.css");
+
+#root,
+html,
+body {
+  margin: 0;
+}
+
+arcgis-map {
+  display: block;
+}
+.viewDiv {
+  height: 90vh;
+  background-color: aqua;
+  position: relative;
+}
+
+.basemap {
+  position: absolute !important;
+  bottom: 15px;
+  left: 15px;
+}
+
+.sidebar {
+  position: absolute;
+  top: 50px;
+  right: 20px;
+  max-width: 88%;
+  background: #fff;
+  padding: 1rem;
+  overflow-y: auto;
+  z-index: 10;
+  color: black;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  float: right;
+  margin-bottom: 1rem;
+  color: black;
+}
+
+.sidebar h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.sidebar ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.sidebar li {
+  margin-bottom: 0.5rem;
+}
+
+.sidebar b {
+  color: #333;
+}
