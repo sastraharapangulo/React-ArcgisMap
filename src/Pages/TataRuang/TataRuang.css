@@ -19,7 +19,7 @@ arcgis-map {
 
 .basemap {
   position: absolute !important;
-  bottom: 15px;
+  bottom: 20px;
   left: 15px;
 }
 

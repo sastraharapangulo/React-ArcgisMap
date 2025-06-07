@@ -6,78 +6,86 @@ import GeoJSONLayer from "@arcgis/core/layers/GeoJSONLayer";
 import Home from "@arcgis/core/widgets/Home";
 import Search from "@arcgis/core/widgets/Search";
 import Expand from "@arcgis/core/widgets/Expand";
-import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
 import VectorTileLayer from "@arcgis/core/layers/VectorTileLayer";
-import { warnaKategori } from "../../assets/warnaKategori";
 import Hero from "../../Components/Hero/Hero";
-
-interface FeatureAttributes {
-  NAMOBJ: string;
-  WADMPR: string;
-  WADMKK: string;
-  WADMKC: string;
-  LUASHA: number;
-  REMARK: string;
-  message?: string;
-}
+import { layerConfigs } from "../../assets/layerConfig";
+import { rendererSymbols } from "../../assets/layerRenderers";
+import BasemapGallery from "@arcgis/core/widgets/BasemapGallery";
 
 function TataRuang() {
   const mapRef = useRef<HTMLDivElement>(null);
-  const [basemap, setBasemap] = useState("streets-vector");
-  const [selectedFeature, setSelectedFeature] =
-    useState<FeatureAttributes | null>(null);
+
+  const [layerVisibility, setLayerVisibility] = useState<{
+    [id: string]: boolean;
+  }>(
+    Object.fromEntries(
+      layerConfigs.map((cfg) => [
+        cfg.id,
+        cfg.id === "infrastrukturPrasaranaLain",
+      ])
+    )
+  );
 
   useEffect(() => {
-    const geojsonLayer = new GeoJSONLayer({
-      url: "/Pola_RTRW_KabKaro.json",
-      outFields: ["*"],
-      renderer: {
-        type: "unique-value",
-        field: "NAMOBJ",
-        defaultSymbol: new SimpleFillSymbol({
-          color: [200, 200, 200, 0.3],
-          outline: { color: "white", width: 0.5 },
-        }),
-        uniqueValueInfos: [],
-      },
-    });
-
-    geojsonLayer.when(() => {
-      geojsonLayer
-        .queryFeatures({ where: "1=1", outFields: ["NAMOBJ"] })
-        .then((results) => {
-          const uniqueNames = Array.from(
-            new Set(results.features.map((f) => f.attributes.NAMOBJ))
-          );
-          const uniqueValueInfos = uniqueNames.map((name) => ({
-            value: name,
-            symbol: new SimpleFillSymbol({
-              color: warnaKategori[name] || [200, 200, 200, 0.6],
-              outline: { color: "white", width: 0.3 },
-            }),
-            label: name,
-          }));
-
-          const renderer = geojsonLayer.renderer as __esri.UniqueValueRenderer;
-          renderer.uniqueValueInfos = uniqueValueInfos;
-        });
-    });
-
     const map = new Map({
-      basemap: basemap,
-      layers: [geojsonLayer],
+      basemap: "topo-vector",
     });
 
     const labelLayer = new VectorTileLayer({
-      portalItem: {
-        id: "1b243539f4514b6ba35e7d995890db1d", // World_Basemap_v2 Labels
-      },
+      style:
+        "https://www.arcgis.com/sharing/rest/content/items/5caa08e28c3940e1a6f04aab9e4889cd/resources/styles/root.json",
     });
-    map.add(labelLayer); // Add labels above polygon layer
+    map.add(labelLayer);
+
+    layerConfigs.forEach((cfg) => {
+      if (!layerVisibility[cfg.id]) return;
+
+      const symbols = rendererSymbols[cfg.id];
+
+      const uniqueValueInfos = symbols
+        ? Object.entries(symbols).map(([value, symbol]) => ({
+            value,
+            label: value,
+            symbol,
+          }))
+        : []; // kosong jika belum ada
+
+      console.log("ini", cfg.defaultSymbol.toJSON());
+
+      const layer = new GeoJSONLayer({
+        url: cfg.url,
+        outFields: ["*"],
+        title: cfg.title,
+        popupTemplate: {
+          title: "{NAMOBJ}",
+          content: [
+            {
+              type: "fields",
+              fieldInfos: [
+                { fieldName: "NAMOBJ", label: "Nama" },
+                { fieldName: "WADMPR", label: "Provinsi" },
+                { fieldName: "WADMKK", label: "Kabupaten" },
+                { fieldName: "WADMKC", label: "Kecamatan" },
+                { fieldName: "LUASHA", label: "Luas (ha)" },
+                { fieldName: "REMARK", label: "Deskripsi" },
+              ],
+            },
+          ],
+        },
+        renderer: {
+          type: cfg.type,
+          field: "NAMOBJ",
+          uniqueValueInfos,
+          defaultSymbol: cfg.defaultSymbol.toJSON(),
+        },
+      });
+
+      map.add(layer);
+    });
 
     const view = new MapView({
       container: mapRef.current!,
-      map: map,
+      map,
       center: [98.4, 3.1],
       zoom: 11,
     });
@@ -89,33 +97,115 @@ function TataRuang() {
     const searchExpand = new Expand({
       view,
       content: searchWidget,
-      expandTooltip: "Open Search",
+      expandTooltip: "Cari Lokasi",
       expandIcon: "search",
       expanded: false,
     });
     view.ui.add(searchExpand, "top-right");
 
-    const handleClick = (event: __esri.ViewClickEvent) => {
-      view.hitTest(event).then((response) => {
-        const results = response.results.filter(
-          (result): result is __esri.GraphicHit => "graphic" in result
-        );
+    // Buat kontainer div untuk kontrol layer
+    const layerControlContainer = document.createElement("div");
+    layerControlContainer.className = "esri-widget p-2 bg-white";
+    layerControlContainer.style.maxHeight = "300px";
+    layerControlContainer.style.overflowY = "auto";
 
-        if (results.length > 0 && results[0].graphic?.attributes) {
-          setSelectedFeature(results[0].graphic.attributes);
-        } else {
-          setSelectedFeature(null);
-        }
+    // Checkbox: Tampilkan Semua Layer
+    const showAllDiv = document.createElement("div");
+    showAllDiv.className = "form-check mb-2";
+
+    const showAllInput = document.createElement("input");
+    showAllInput.type = "checkbox";
+    showAllInput.className = "form-check-input";
+    showAllInput.id = "showAllLayers";
+    showAllInput.checked = Object.values(layerVisibility).every((v) => v);
+
+    const showAllLabel = document.createElement("label");
+    showAllLabel.className = "form-check-label fw-bold";
+    showAllLabel.htmlFor = "showAllLayers";
+    showAllLabel.innerText = "Tampilkan Semua Layer";
+
+    showAllInput.onchange = (e) => {
+      const checked = (e.target as HTMLInputElement).checked;
+      const updatedVisibility = Object.fromEntries(
+        layerConfigs.map((cfg) => [cfg.id, checked])
+      );
+      setLayerVisibility(updatedVisibility);
+
+      // Update semua checkbox layer individual
+      layerConfigs.forEach((layer) => {
+        const checkbox = document.getElementById(layer.id) as HTMLInputElement;
+        if (checkbox) checkbox.checked = checked;
       });
     };
 
-    const clickHandle = view.on("click", handleClick);
+    showAllDiv.appendChild(showAllInput);
+    showAllDiv.appendChild(showAllLabel);
+    layerControlContainer.appendChild(showAllDiv);
+
+    // Masukkan checkbox untuk masing-masing layer
+    layerConfigs.forEach((layer) => {
+      const div = document.createElement("div");
+      div.className = "form-check";
+
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      input.className = "form-check-input";
+      input.id = layer.id;
+      input.checked = layerVisibility[layer.id];
+      input.onchange = (e) => {
+        const checked = (e.target as HTMLInputElement).checked;
+
+        const updated = {
+          ...layerVisibility,
+          [layer.id]: checked,
+        };
+        setLayerVisibility(updated);
+
+        // Jika semua layer dicentang, centang juga "Tampilkan Semua"
+        const allChecked = layerConfigs.every((cfg) => updated[cfg.id]);
+        const showAllCheckbox = document.getElementById(
+          "showAllLayers"
+        ) as HTMLInputElement;
+        if (showAllCheckbox) showAllCheckbox.checked = allChecked;
+      };
+
+      const label = document.createElement("label");
+      label.className = "form-check-label";
+      label.htmlFor = layer.id;
+      label.innerText = `Tampilkan ${layer.title}`;
+
+      div.appendChild(input);
+      div.appendChild(label);
+      layerControlContainer.appendChild(div);
+    });
+
+    // Tambahkan ke Expand Widget
+    const layerExpand = new Expand({
+      view,
+      content: layerControlContainer,
+      expandIcon: "layers",
+      expandTooltip: "Pilih Layer",
+    });
+
+    view.ui.add(layerExpand, "top-left");
+
+    const basemapGallery = new BasemapGallery({
+      view: view,
+    });
+
+    const basemapExpand = new Expand({
+      view: view,
+      content: basemapGallery,
+      expandIcon: "basemap", // icon bawaan
+      expandTooltip: "Pilih Basemap",
+    });
+
+    view.ui.add(basemapExpand, "top-left");
 
     return () => {
-      clickHandle.remove();
       view.destroy();
     };
-  }, [basemap]);
+  }, [layerVisibility]);
 
   return (
     <>
@@ -124,71 +214,8 @@ function TataRuang() {
 
       <div className="container position-relative">
         <div className="viewDiv" ref={mapRef}></div>
-
-        <select
-          name="dropdown"
-          className="basemap form-select w-auto"
-          onChange={(e) => setBasemap(e.target.value)}
-          value={basemap}
-        >
-          <option value="streets-vector">Streets Vector</option>
-          <option value="osm">Open Street Map</option>
-          <option value="satellite">Satellite</option>
-          <option value="topo-vector">Topo Vector</option>
-        </select>
-
-        {selectedFeature && (
-          <div className="sidebar">
-            <button
-              className="close-button"
-              onClick={() => setSelectedFeature(null)}
-            >
-              ✖
-            </button>
-            <h2>Detail Area</h2>
-            {selectedFeature.NAMOBJ ? (
-              <div className="table-responsive">
-                <table className="table table-striped">
-                  <tbody>
-                    <tr>
-                      <th scope="row">Nama</th>
-                      <td>:</td>
-                      <td>{selectedFeature.NAMOBJ}</td>
-                    </tr>
-                    <tr>
-                      <th scope="row">Provinsi</th>
-                      <td>:</td>
-                      <td>{selectedFeature.WADMPR}</td>
-                    </tr>
-                    <tr>
-                      <th scope="row">Kabupaten</th>
-                      <td>:</td>
-                      <td>{selectedFeature.WADMKK}</td>
-                    </tr>
-                    <tr>
-                      <th scope="row">Kecamatan</th>
-                      <td>:</td>
-                      <td>{selectedFeature.WADMKC}</td>
-                    </tr>
-                    <tr>
-                      <th scope="row">Luas (ha)</th>
-                      <td>:</td>
-                      <td>{selectedFeature.LUASHA}</td>
-                    </tr>
-                    <tr>
-                      <th scope="row">Deskripsi</th>
-                      <td>:</td>
-                      <td>{selectedFeature.REMARK}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p>Belum ada data untuk area yang dipilih</p>
-            )}
-          </div>
-        )}
       </div>
+
       <br />
     </>
   );
