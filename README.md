@@ -26,17 +26,6 @@ This project demonstrates interactive map visualization, data layer rendering, a
 
 ---
 
-## 📂 Project Structure
-
-```bash
-src/
-├── components/          # Reusable React components (Map, Sidebar, etc.)
-├── data/                # GeoJSON datasets
-├── services/            # ArcGIS-related utilities
-├── App.js               # Main React entry point
-└── index.js             # React bootstrap file
-```
-
 ---
 
 ## 🔧 Installation
