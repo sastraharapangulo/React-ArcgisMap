@@ -1,54 +1,100 @@
-# React + TypeScript + Vite
+# React ArcGIS Map
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A simple web map application built with **React.js** and integrated with **ArcGIS JavaScript API**.\
+This project demonstrates interactive map visualization, data layer rendering, and sidebar feature display using GeoJSON data.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Features
 
-## Expanding the ESLint configuration
+- 🗺️ Display interactive ArcGIS map inside React
+- 📍 Display multiple layers using GeoJSON
+- 📊 Show detailed information in sidebar upon clicking map features
+- 🔎 Search and filter features
+- 🎯 Support dynamic layer switching (e.g: street lines, polygons, etc)
+- 💡 Smooth integration with ArcGIS API 4.x
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## 🛠️ Tech Stack
+
+- **Frontend:** React.js
+- **Mapping Library:** ArcGIS JavaScript API 4.x
+- **Data Format:** GeoJSON
+- **Styling:** Material UI, Bootstrap
+- **State Management:** React Hooks
+
+---
+
+## 📂 Project Structure
+
+```bash
+src/
+├── components/          # Reusable React components (Map, Sidebar, etc.)
+├── data/                # GeoJSON datasets
+├── services/            # ArcGIS-related utilities
+├── App.js               # Main React entry point
+└── index.js             # React bootstrap file
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🔧 Installation
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+Clone the repository:
+
+```bash
+git clone https://github.com/sastraharapangulo/React-ArcgisMap.git
+cd React-ArcgisMap
 ```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Run development server:
+
+```bash
+npm start
+```
+
+The app should be running on:\
+[http://localhost:3000](http://localhost:3000)
+
+---
+
+## 📷 Screenshots
+
+| Map View                  | Feature Sidebar               |
+| ------------------------- | ----------------------------- |
+| *(insert map screenshot)* | *(insert sidebar screenshot)* |
+
+---
+
+## 🎯 Main Learning Outcome
+
+This project demonstrates:
+
+- React integration with third-party mapping SDK (ArcGIS)
+- Handling map events inside React components
+- Displaying GeoJSON data on ArcGIS map
+- Managing feature selection & displaying attributes
+- Separation of concern between map rendering and data control
+
+---
+
+## 👤 Author
+
+**Sastra Harapan Gulo**
+
+- [LinkedIn](https://linkedin.com/in/sastra-harapan-gulo)
+- [GitHub](https://github.com/sastraharapangulo)
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
